@@ -60,7 +60,7 @@ pip install langchain --upgrade -q
 4. for the environment go to [pinecone environment](https://docs.pinecone.io/guides/get-started/quickstart) and add the codes in the `.py` file:
     ```Py
     from pinecone import Pinecone, ServerlessSpec
-    pc = Pinecone(api_key='5300be0e-a42f-4c62-86ee-422dfd2bdfec')
+    pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
     index_name = "docs-quickstart-index"
     
     if index_name not in pc.list_indexes().names():
