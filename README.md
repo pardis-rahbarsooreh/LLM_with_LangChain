@@ -14,19 +14,19 @@ ___
 * Summarization Tools
 
 ### LangChain main concepts: 
-#### LangChain Components:
-   1. **LLM Wrappers** (allow us to connect to and use LLMs like GPT-4 from the Hugging Face Hub)
-   2. **Prompt Templates** (allow us to create dynamic prompts which are the input to the LLM)
-   3. **Indexes** (allow us to extract relevant information for the LLMs)
-   4. **Memory** (concept of storing and retrieving data in the process of a conversation) 
-      * **Short Term Memory** (how to pass data in the context of a single conversation)
-      * **Long Term Memory** (how to fetch and update information between conversations)
-#### Chains
-* Allow us to combine multiple components together to solve a specific task and build an entire LLM application
-#### Agents
-* Facilitate interaction between the LLM and external APIs. They play a crucial role in decision-making, determining which actins the LLM should undertake.
-* Agents are enabling tools for LLMs 
-* This process involves taking an action, observing the result, and then repeating the cycle until completion 
+* #### LangChain Components:
+   * **LLM Wrappers** (allow us to connect to and use LLMs like GPT-4 from the Hugging Face Hub)
+   * **Prompt Templates** (allow us to create dynamic prompts which are the input to the LLM)
+   * **Indexes** (allow us to extract relevant information for the LLMs)
+   * **Memory** (concept of storing and retrieving data in the process of a conversation) 
+     * **Short Term Memory** (how to pass data in the context of a single conversation)
+     * **Long Term Memory** (how to fetch and update information between conversations)
+* #### Chains
+  * Allow us to combine multiple components together to solve a specific task and build an entire LLM application
+* #### Agents
+  * Facilitate interaction between the LLM and external APIs. They play a crucial role in decision-making, determining which actins the LLM should undertake.
+  * Agents are enabling tools for LLMs 
+  * This process involves taking an action, observing the result, and then repeating the cycle until completion 
 
 ___
 ## <span style="color: orangered;">Requirements</span>
@@ -60,7 +60,7 @@ pip install langchain --upgrade -q
 4. for the environment go to [pinecone environment](https://docs.pinecone.io/guides/get-started/quickstart) and add the codes in the `.py` file:
     ```Py
     from pinecone import Pinecone, ServerlessSpec
-    pc = Pinecone(api_key='5300be0e-a42f-4c62-86ee-422dfd2bdfec')
+    pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
     index_name = "docs-quickstart-index"
     
     if index_name not in pc.list_indexes().names():
@@ -75,7 +75,7 @@ pip install langchain --upgrade -q
         )
     ```
 > [!NOTE]
-> Due to security reasons create your own API keys when running the program and put them in the .env file
+> Due to security reasons create your own API keys when running the program and put them in the `.env` file
 
 
 ## <span style="color: darkcyan;">Pinecone</span>
@@ -137,7 +137,7 @@ Look at this format of an [API call](https://platform.openai.com/docs/guides/tex
 
 #### Creating the `chat` object:
 ```Py
-chat = ChatOpenAI(model_name='gpt-4o', temperature=0.7, max_tokens=1024)
+chat = ChatOpenAI(model_name='gpt-4o-mini', temperature=0.7, max_tokens=1024)
 ```
 
 #### Creating the `messages` list:
@@ -303,6 +303,126 @@ agent_executor.invoke('Calculate 1.7**5.2')
 ```
 * Creating a Python `agent_executor` using `ChatOpenAI` `llm` allows us to have the language model execute Python code.
 * **The `tool` argument:** tools are essentially functions that agents can use to interact with the outside world.
+___
+## <span style="color: darkcyan;">Embeddings</span>
+Text Embeddings are numeric representations of text.
+They can be used to measure the relativeness in similarity between two pieces of text (i.e. how close two pieces of text are in meaning.)
+
+The distance between two embeddings or two vectors measures their relatedness which translates to the relatedness between the text concepts they represent.
+
+Similar embeddings or vectors represent similar concepts.
+
+#### Embeddings Applications
+* **Text Classification:** assigning a label to a piece of text.
+* **Text Clustering:** grouping together pieces of text that are similar in meaning.
+* **Question-Answering:** answering a question posed in natural language.
+___
+## <span style="color: darkcyan;">Vector Databases</span>
+### Challenges
+* Artificial Intelligence is being used in a variety of industries and has the potential to improve our lives in many ways. 
+But it also introduces new challenges.
+
+* One of the biggest challenges is efficient data processing. 
+AI applications such as LLMs, Generative AI, and Semantic Search require large amounts of data to train and operate.
+Efficient data processing is essential for making AI applications successful. 
+Many of the latest AI applications rely on **vector embeddings**. 
+Chatbots, question-answering, and machine translation rely on vector embeddings. 
+
+    > **Reminder:** Vector Embeddings mean converting text to numbers that carry semantic information within themselves.
+Vector Embeddings are a way of representing text as a set of numbers in a high-dimensional space. 
+And the numbers represent meaning of the words in the text.
+
+* Vector Embeddings are critical for the AI to gain understanding and maintain long term memory. 
+If you store embeddings in a csv file, or another format that is not dedicated for embeddings, 
+the size of the file will increase dramatically and the performance will drop.
+
+    Consequently, we need a specialized database or data store 
+specifically designed to manage such large quantities of data in a numeric representation.
+
+### Vector Databases
+* Vector Databases are a new type of database, designed to store and query **unstructured data**.
+
+    Unstructured data is data that does not have a fixed schema, such as text, images, and audio.
+    (unlike SQL)
+#### Some of Vector Databases:
+1. Pinecone
+2. Chroma
+3. milvus
+4. qdrant
+
+#### Pinecone
+* Vector database designed for storing and querying high dimensional vectors. 
+It provides fast and efficient semantic search over vector embeddings.
+By integrating OpenAI's LLMs with Pinecone, we combine deep learning capabilities 
+for embedding generation with efficient vector storage and retrieval.
+
+### Pipeline for Vector Databases
+* Vector databases use a combination of different optimized algorithms that 
+    all participate in **Approximate Nearest Neighbor (ANN)** search.
+#### Steps:
+1. Embedding 
+   * Create vector embeddings for the content we want to index. This is done by using an embedding model.
+2. Indexing
+   * Insert the vector embeddings into the vector database. This is done by associating each vector embedding with a reference to the original content that was used to create it. 
+3. Querying
+   * Query the vector database for similar content. This is done by using the same embedding model used to create the vector embeddings. The embeddings model is used to create the vector embedding for the query, and this vector embedding is then used to query the database for similar vector embeddings. The similar vector embeddings are then associated with the original content that was used to create them. 
+ 
+![pipeline](vd_pipeline.png)
+___
+## <span style="color: darkcyan;">Splitting and Embedding Text Using LangChain</span>
+Importing `.env` variables (API Keys):
+```Py
+import os
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv(), override=True)
+```
+There are [langchain document loaders](https://python.langchain.com/v0.1/docs/modules/data_connection/document_loaders/) that are used to load data from almost any type of documents.
+In this project, I'll work with PDF document (only because it is a part of my data science course and i want to get familiar with it! :blush:)
+
+
+First run this in the terminal:
+```Py
+pip install pypdf
+```
+Then load the PDF file using:
+```Py
+from langchain_community.document_loaders import PyPDFLoader
+loader = PyPDFLoader("./Sample.pdf")
+pages = loader.load_and_split()
+```
+Examine it with printing the 11th page's content:
+```Py
+print(pages[10].page_content)
+```
+Now we combine the pages of the PDF into one string called `whole_pdf`:
+```Py
+whole_pdf = ''
+for page in pages:
+    whole_pdf += page.page_content
+```
+
+Now we want to split the read document into chunks. We'll use the `RecursiveCharacterTextSplitter` and split the whole pdf into chunks:
+```Py
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=100,         # maximum chunk size
+    chunk_overlap=20,       # maximum overlap between chunks size
+    length_function=len
+)
+chunks = text_splitter.create_documents([whole_pdf])
+```
+Examine it with printing the 101th chunk and number of all the chunks:
+```Py
+print(chunks[100].page_content)
+print(f'Now you have {len(chunks)} chunks')
+```
+ 
+
+
+
+
+
+
 
 
 
