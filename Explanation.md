@@ -417,22 +417,136 @@ print(chunks[100].page_content)
 print(f'Now you have {len(chunks)} chunks')
 ```
  
+## <span style="color: darkcyan;">Inserting the Embeddings into a Pinecone Index</span>
+In this part, we'll embed each chunk of text (which we created in the last part using the `chunks = text_splitter.create_documents([whole_pdf])`) into numeric vectors and insert them into a Pinecone index.
+
+[Understanding Indexes](https://docs.pinecone.io/guides/indexes/understanding-indexes): An index is the highest-level organizational unit of vector data in Pinecone. It accepts and stores vectors, serves queries over the vectors it contains, and does other vector operations over its contents.
+
+First, we should import the Pinecone client:
+```Py
+from pinecone import Pinecone, ServerlessSpec
+pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
+```
+[Serverless indexes](https://docs.pinecone.io/guides/indexes/understanding-indexes#serverless-indexes): With serverless indexes, you don’t configure or manage any compute or storage resources. Instead, based on a breakthrough architecture, serverless indexes scale automatically based on usage, and you pay only for the amount of data stored and operations performed, with no minimums. This means that there’s no extra cost for having additional indexes.
+
+If you want to **view** all your indexes with their attributes, you can use:
+```Py
+all_indexes = pc.list_indexes()
+```
+
+And if you only want to view the **names** of your indexes, you can use:
+```Py
+all_indexes = pc.list_indexes().names()
+```
+If you want to **delete** indexes, you can use the following syntax:
+```Py
+pc.delete_index("index-name")
+```
+
+Creating a new index with the name `sample-index`:
+```Py
+index_name = "sample-index"
+
+if index_name not in pc.list_indexes().names():
+    pc.create_index(
+        name=index_name,
+        dimension=1536,
+        metric="cosine",
+        spec=ServerlessSpec(
+            cloud='aws',
+            region='us-east-1'
+        )
+    )
+```
+You can also do and view all the above commands and their results in the [Pinecone](https://www.pinecone.io/) website after you log in. (you just have to reload)
+
+Next, we want to upload the vectors to Pinecone using Langchain:
+```Py
+from langchain_community.vectorstores import Pinecone
+vector_store = Pinecone.from_documents(chunks, embeddings, index_name=index_name)
+```
+This method has three arguments:
+* The `chunks` is a list of text documents that have been obtained in the previous section, using `chunks = text_splitter.create_documents([whole_pdf])`.
+    These smaller chunks will be indexed in Python to make it easier to search and retrieve relevant information later on. 
+* The `embeddings` object is an instance of the OpenAI embeddings class, created using:
+    ```Py
+    from langchain_openai import OpenAIEmbeddings
+    embeddings = OpenAIEmbeddings()
+    ```
+  
+    It is responsible for converting text data into embeddings using OpenAI's embedding model. 
+    These embeddings will be stored in the Pinecone's index and used for similarity search.
+* The `index_name` is a string representing the name of the Pinecone index. 
+
+* This method returns a `vector_store` object initialized from documents and embeddings. 
+
+**In a Nutshell**: the method `.from_documents()` processes the input documents, generates the embeddings using the provided OpenAI `embeddings` instance, and returns a new Pinecone `vector_store`. 
+The resulting `vector_store` object can perform similarity searches and retrieve relevant documents based on user queries. 
+
+## <span style="color: darkcyan;">Asking Questions (Similarity Search)</span>
+So far, we have split the text of a PDF into chunks and embedded them into vectors which are then inserted into a Pinecone index.
+
+### How to ask questions?
+1. The user defines a query (e.g. a question)
+2. The query is embedded into a vector
+3. A similarity search is performed in the vector database
+4. The text behind the most similar vectors is the answer to user's question.
+
+```Py
+# defining a query
+query = 'What is isolation?'
+
+# extracting all the relevant chunks to the query
+result = vector_store.similarity_search(query)
+print(result)
+
+# iterate over the chunks and only printing the chunk texts
+for r in result: 
+    print(r.page_content)
+    print('-'*50)
+```
+These chunks represent the answer, but cannot be given to users in chunks. They must be converted into natural language. 
+
+That is where the LLM comes in. We retrieve the most relevant chunks of text and feed them to the language model for the final answer.
+
+First we need to define our LLm model
+```Py
+from langchain.chains import RetrievalQA
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model='gpt-4o', temperature=0.6)
+```
+
+Then, we have to expose index in a retriever interface.
+
+The retriever interface is a generic interface which makes it easy to combine documents with language models. 
+```Py
+retriever = vector_store.as_retriever(
+    search_type='similarity',
+    search_kwargs={'k': 3})
+```
+`'k': 3` means that it will return the 3 most similar chunks to the user's query.
+
+Finally, we create a chain to answer questions
+```Py
+chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=retriever)
+```
+The default `chain_type="stuff"` uses all of the text from the document in the prompt. 
 
 
+Now we can ask questions about the content of the document and it will be answered in the natural language:
+```Py
+answer = chain.invoke(query)
+print('Query:', answer['query'], 
+      '\nResult:', answer['result'])
+```
 
+This is the end of the short introduction to the backbone of OPL application (OpenAI, Pinecone, Langchain).
 
-
-
-
-
-
-
-
-
-
-
-
-
+Next, we will combine all that we have learned to develop an LLm powered application than can answer questions about the content of private documents. 
 
 
 
