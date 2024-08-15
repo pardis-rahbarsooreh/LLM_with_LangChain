@@ -367,7 +367,8 @@ for embedding generation with efficient vector storage and retrieval.
 3. Querying
    * Query the vector database for similar content. This is done by using the same embedding model used to create the vector embeddings. The embeddings model is used to create the vector embedding for the query, and this vector embedding is then used to query the database for similar vector embeddings. The similar vector embeddings are then associated with the original content that was used to create them. 
  
-![pipeline](vd_pipeline.png)
+![pipeline](./Documents/vd_pipeline.png)
+
 ___
 ## <span style="color: darkcyan;">Splitting and Embedding Text Using LangChain</span>
 Importing `.env` variables (API Keys):

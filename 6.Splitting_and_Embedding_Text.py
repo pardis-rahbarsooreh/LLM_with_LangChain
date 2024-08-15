@@ -6,7 +6,7 @@ load_dotenv(find_dotenv(), override=True)
 # Splitting and Embedding Text Using LangChain
 from langchain_community.document_loaders import PyPDFLoader
 
-loader = PyPDFLoader("./Sample.pdf")
+loader = PyPDFLoader("./Documents/Sample.pdf")
 pages = loader.load_and_split()
 #print('Page 11 of the document: ')
 #print(pages[10].page_content)
